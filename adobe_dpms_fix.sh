@@ -10,7 +10,7 @@ declare -r LOG_FILE="/tmp/$(basename $0).log"
 declare -r ACTION_KEY=Ctrl
 declare -r XDOTOOL=xdotool
 declare -r FLASH_LIB="libflashplayer.so"
-declare -r REFRESH_TIME=3s 
+declare -r REFRESH_TIME=15s 
 declare -i cpu_load=0
 
 # Function get cputime by FLASH_LIB
