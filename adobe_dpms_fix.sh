@@ -1,29 +1,47 @@
 #!/bin/bash
-# ver.: 0.0.1
+# ver.: 0.0.2
 # Script fixed dpms support when you watch flash video
 # Author: drunia drunia@xakep.ru
+#
+# Version 0.0.2: Added chrome, firefox like a FLASH_LIB for monitoring proccess. 
 
 MAX_CPU=
 
-declare -r VER="0.0.1 alpha"
+declare -r VER="0.0.2 alpha"
 declare -r BNAME=$(basename $0)
 declare -r LOG_FILE="/tmp/$(basename $0).log"
 declare -r ACTION_KEY=Ctrl
 declare -r XDOTOOL=xdotool
-declare -r FLASH_LIB="libflashplayer.so"
-declare -r REFRESH_TIME=15s 
+declare -r FLASH_LIB="libflashplayer.so chrome.*ppapi firefox"
+declare -r REFRESH_TIME=45s 
 declare -i cpu_load=0
+declare proc_id=0
+
 
 # Function get cputime by FLASH_LIB
 get_cpu_percent() {
-	local flash_pid=$(ps aux | grep -v grep | grep $FLASH_LIB | awk '{print $2}')
-	[ -n "$flash_pid" ] || {
-		cpu_load=0
-		return 1
-	}  
-	cpu_load=$(top -n 1 -p $flash_pid -b | tail -n 2 | head -n 2 \
+	proc_id=0
+	local cpu=0
+	#Find proccess, first libflashplayer.so
+	for proccess in $FLASH_LIB; do
+	  local flash_pid=$(ps aux | grep -v grep | grep $proccess | awk '{print $2}')
+	  [ -n "$flash_pid" ] || continue
+	  
+	  #Select proccess ID with highnest CPU load
+	  for pid in $flash_pid; do
+	    #echo "check proccess $proccess for load CPU"
+	    cpu_load=$(top -n 1 -p $pid -b | tail -n 2 | head -n 2 \
 		| sed 's/.*PID.*$//g' | awk '{print $9}' | sed 's/[\.,].*//g')
-	return $?
+	    #echo "\$cpu_load = $cpu_load | \$cpu = $cpu"
+	    if [[ $cpu_load -gt $cpu ]]; then
+	      proc_id=$pid
+	      cpu=$cpu_load
+	    fi
+	  done
+	done
+	
+	cpu_load=$cpu
+	return 0
 }
 
 # Function set screen ON
@@ -141,10 +159,10 @@ do
 	get_cpu_percent
 	if [ $cpu_load -gt $MAX_CPU ]
 	then
-		echo "$(date): Detect active $FLASH_LIB load CPU: $cpu_load%"
+		echo "$(date): Detect active, PID $proc_id, load CPU: $cpu_load%"
 		do_action
 	else
-		echo "$(date): $FLASH_LIB not active detected CPU: $cpu_load%"
+		echo "$(date): Idle, CPU: $cpu_load%"
 	fi  
 	sleep $REFRESH_TIME	
 done
