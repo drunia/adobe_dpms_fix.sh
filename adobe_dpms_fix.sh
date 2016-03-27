@@ -86,7 +86,7 @@ stop() {
 	if [ -e /tmp/$BNAME.pid ] 
 	then
 		pid=$(cat /tmp/$BNAME.pid)
-		ps -p $pid 1>null 2>&1
+		ps -p $pid 1>/dev/null 2>&1
 		[ $? -ne 0 ] || {
 			echo -n "Stopping $BNAME..."
 			rm /tmp/$BNAME.pid
@@ -125,7 +125,7 @@ case $1 in
 	if [ -e /tmp/$BNAME.pid ] 
 	then
 		pid=$(cat /tmp/$BNAME.pid)
-		ps -p $pid 1>null 2>&1
+		ps -p $pid 1>/dev/null 2>&1
 		[ $? -ne 0 ] || {
 			echo "Error: $BNAME already running."
 			sleep 3s
